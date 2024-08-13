@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Questionnaire</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .title {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h3 {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        label {
+            margin-right: 20px;
+        }
+
+        .pagination {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 0 10px;
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .question {
+            display: none;
+        }
+
+        .question.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Questionnaire</h1>
+
+        <form id="questionnaire-form" action="/questionnaire" method="POST">
+            <!-- Questions will be dynamically inserted here -->
+            <div id="question-container">
+                <!-- Questions will be dynamically inserted here -->
+            </div>
+
+            <div class="pagination">
+                <button id="prev-button" type="button">Previous</button>
+                <button id="next-button" type="button">Next</button>
+                <input id="submit-button" type="submit" value="Submit" style="display: none;">
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const questions = {{ questions | tojson }};
+            const questionContainer = document.getElementById('question-container');
+            const prevButton = document.getElementById('prev-button');
+            const nextButton = document.getElementById('next-button');
+            const submitButton = document.getElementById('submit-button');
+            let currentQuestionIndex = 0;
+
+            // Function to render questions dynamically
+            function renderQuestions() {
+                questionContainer.innerHTML = '';
+
+                questions.forEach((question, index) => {
+                    const questionDiv = document.createElement('div');
+                    questionDiv.className = 'question';
+                    questionDiv.id = `question-${index}`;
+                    
+                    questionDiv.innerHTML = `
+                        <h3>${question}</h3>
+                        <input type="radio" id="none_${index}" name="answer_${index}" value="none">
+                        <label for="none_${index}">None</label><br>
+                        <input type="radio" id="sometimes_${index}" name="answer_${index}" value="sometimes">
+                        <label for="sometimes_${index}">Sometimes</label><br>
+                        <input type="radio" id="severe_${index}" name="answer_${index}" value="severe">
+                        <label for="severe_${index}">Severe</label><br>
+                    `;
+                    questionContainer.appendChild(questionDiv);
+                });
+                
+                showQuestion(currentQuestionIndex);
+            }
+
+            function showQuestion(index) {
+                const allQuestions = Array.from(document.querySelectorAll('#question-container .question'));
+                allQuestions.forEach((q, i) => {
+                    q.classList.toggle('active', i === index);
+                });
+
+                prevButton.style.display = (index === 0) ? 'none' : 'inline-block';
+                nextButton.style.display = (index === questions.length - 1) ? 'none' : 'inline-block';
+                submitButton.style.display = (index === questions.length - 1) ? 'inline-block' : 'none';
+            }
+
+            prevButton.addEventListener('click', function() {
+                if (currentQuestionIndex > 0) {
+                    currentQuestionIndex--;
+                    showQuestion(currentQuestionIndex);
+                }
+            });
+
+            nextButton.addEventListener('click', function() {
+                if (currentQuestionIndex < questions.length - 1) {
+                    currentQuestionIndex++;
+                    showQuestion(currentQuestionIndex);
+                }
+            });
+
+            // Initialize questions
+            renderQuestions();
+        });
+    </script>
+</body>
+</html>
